@@ -1,5 +1,3 @@
-from random import triangular
-from typing import final
 
 from numpy import cross, save
 from .TrainingEpisode import TrainingEpisode
