@@ -1,5 +1,9 @@
+#try to make this selective
 
-from numpy import cross, save
+from typing import Callable, List, Optional
+from Elinvar.TM.Modules.Module import Module
+from Elinvar.TM.Modules.Conditions import Condition
+
 from .TrainingEpisode import TrainingEpisode
 
 from os import mkdir
@@ -7,51 +11,38 @@ from os import mkdir
 
 class TrainingManager: 
   def __init__(self):
-    self.datasets={}
-    self.trainingQue=[]#list of lambda functions to create trainng episodes OR a generator
-    self.currentTrainingEpisode=None
-    self.exportOn="ALL"#settings for when to export training episdoes
-    self.bestCrossValError=None
-    self.bestTrainingEpisode=-1#index for best training episode
-    #settings: BEST(all that beat the best final crossval error)  ALL
-    self.crossValRegressionData=[]
+    self.trainingQue:List[Callable[[],TrainingEpisode]]=[]#list of functions to create training episodes OR a generator
+    self.currentTrainingEpisode:Optional[TrainingEpisode]=None
 
-  #can use one or both
-  #TODO set minimIterations
-  def setEpisodeEndRequirements(self,maxIterations=None,minErrorDerivative=None):
-    self.maxIterations=maxIterations
-    self.minErrorDerivative=minErrorDerivative
+    self.modules:List[Module]=[]
 
-    if(maxIterations==None):
-      self.maxIterationsConstraint=False
-    else:
-      self.maxIterationsConstraint=True
-    if(minErrorDerivative==None):
-      self.minErrorDerivativeConstraint=False
-    else:
-      self.minErrorDerivativeConstraint=True
+    #set default exit condition to avoid exceptions
+    #This should be overwritten to something useful
+    self.exitCondition:Condition=Condition()
+    self.exitCondition.met=True
 
-    if( (not self.minErrorDerivativeConstraint) and ( not self.maxIterationsConstraint)):
-      #TODO write this error
-      raise()
+  def setEpisodeExitCondition(self,condition:Condition):
+    #recursive function to add conditions to self.modules
+    def addCondition(c:Condition):
+      if not c in self.modules:
+        self.modules.append(c)
+      for dependency in c.dependencies:
+        addCondition(dependency)
 
-  def addDataSet(self,datasetName,files,extractionFunction):
-    self.datasets[datasetName]={
-      "files":files,
-      "extract":extractionFunction
-    }
+    self.exitCondition:Condition=condition
+    addCondition(condition)
 
+  #episodeCallback has args: TrainingEpisode
   def runQue(self,saveDirectory=".\\runs"):
-    for function in self.trainingQue:
-      #Garbage collector should be deleteing these once we're done with them
-      self.currentTrainingEpisode=function()
-      finalCrossValError = self.runEpisode()
-
-      #TEMP 
-      print(self.currentTrainingEpisode.crossValRegressionHistory[-1])
-      print(self.currentTrainingEpisode.crossValRegressionVariables)
-
-      bestTrainingEpisode=False
+    #run modules
+    for module in self.modules:
+      module.startOfQue(saveDirectory)
+    
+    for episodeIndex,function in enumerate(self.trainingQue):
+      #Garbage collector should be deleting these once we're done with them
+      currentTrainingEpisode=function()
+      currentTrainingEpisodeIndex:int=episodeIndex
+      self.runEpisode(currentTrainingEpisode,currentTrainingEpisodeIndex)
 
       try:
         mkdir(saveDirectory)
@@ -60,58 +51,39 @@ class TrainingManager:
       except Exception as e:
         print(e)
 
-      if self.bestCrossValError!=None:
-        if finalCrossValError<self.bestCrossValError:
-          self.bestCrossValError=finalCrossValError
-          bestTrainingEpisode=True
-      else:
-        self.bestCrossValError=finalCrossValError
-        bestTrainingEpisode=True
 
-      if self.exportOn=="BEST":
-        if bestTrainingEpisode:
-          print("saving network to:",saveDirectory)
-          self.currentTrainingEpisode.exportNetwork(saveDirectory)
-      elif self.exportOn=="ALL":
-        print("saving network to:",saveDirectory)
-        self.currentTrainingEpisode.exportNetwork(saveDirectory)
-      #export data
-      
-      self.currentTrainingEpisode.exportData(saveDirectory)
+    #run modules
+    for module in self.modules:
+      module.endOfQue()
+  
 
-  def crossValCallback(self,iteration,crossValError):
-    print("\t"+str(crossValError),end="")
-    self.lastCrossVal=crossValError
-    self.lastCrossValDerivativeEstimation=self.currentTrainingEpisode.crossValDerivativeEstimation(iteration)
-    print("\t"+str(self.lastCrossValDerivativeEstimation),end="") 
+  def runEpisode(self,currentTrainingEpisode:TrainingEpisode,currentTrainingEpisodeIndex:int):
+    #run modules
+    for module in self.modules:
+      module.startOfEpisode(currentTrainingEpisode,currentTrainingEpisodeIndex)
 
-  def crossValRegressionCallback(self,iteration,crossValRegressionError,crossValRegressionVariables):
-    #log data
-    self.crossValRegressionData.append([iteration,crossValRegressionError,crossValRegressionVariables])
+    def crossValCallback(index:int,crossValError:float):
+      self.lastCrossVal=crossValError
+      for module in self.modules:
+        module.endOfCrossVal(currentTrainingEpisode,index,crossValError)
 
-  def runEpisode(self):
-    print("Running episode",self.currentTrainingEpisode.name)
-    print()
-    print("I\ttrainingError\titerationTime",end="")
-    print("\tcrossValError\tcrossValDerivativeEstimation",end="")
-    print()
+    def iterationCallback(index:int,trainingError:float,iterationTime:float):
+      for module in self.modules:
+        module.endOfIteration(currentTrainingEpisode,index,trainingError,iterationTime)
+
     #training variables
-    self.lastCrossValDerivativeEstimation=-1
     self.lastCrossVal=-1
 
     running=True
-    #setupCallbacks
-    iterationCallback=lambda iteration,trainingError,iterationTime: print(str(iteration)+"\t"+str(trainingError)+"\t"+str(iterationTime),end="")
+
     while running:
-      self.currentTrainingEpisode.train(iterationCallback,self.crossValCallback,self.crossValRegressionCallback)
-      print()
+      currentTrainingEpisode.train(
+        iterationCallback=iterationCallback,
+        crossValCallback=crossValCallback,
+        )
       #check exit requirements
-      if self.maxIterationsConstraint:
-        if self.currentTrainingEpisode.iterationCounter>=self.maxIterations:
-          print("MAX iterations hit, exiting")
-          running=False
-      elif self.minErrorDerivativeConstraint:
-        if self.lastCrossValDerivativeEstimation!=-1 and self.lastCrossValDerivativeEstimation<self.minErrorDerivative:
-          print("MIN error derrivate hit, exiting")
-          running=False
-    return self.lastCrossVal
+      if self.exitCondition.met:
+        running=False
+
+    for module in self.modules:
+      module.endOfEpisode(currentTrainingEpisode,self.lastCrossVal)

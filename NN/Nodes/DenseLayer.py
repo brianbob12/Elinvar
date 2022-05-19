@@ -13,51 +13,79 @@
 #dependencies
 
 from tensorflow import (Variable,matmul,constant)
-from tensorflow.random import truncated_normal
+from .BuildableNode import BuildableNode
+from tensorflow.random import normal
 from tensorflow.nn import relu,sigmoid
 from tensorflow.math import tanh
 
-from .Exceptions import *
+from ..Exceptions import *
 
-class DenseLayer():
-  def __init__(self):
-    #initalise a map of string to function for activation fuctions
-    #TODO: use this once globally and pass to all layers
+class DenseLayer(BuildableNode):
+  def __init__(self,name=None,protected=False,ID=None):
+    super().__init__(name=name,protected=protected,ID=ID)
+    self.hasTrainableVariables=True 
     self.activationLookup={"relu":relu,"linear":self.linear,"sigmoid":sigmoid,"tanh":tanh}
   
   def linear(self,x):
     return (x)
 
-  #create a new layer form randomly initialized values
   #throws unknownActivationFunction if activation function not it activationLookup
-  def newLayer(self,inputSize,layerSize,activation):
-    self.inputSize=inputSize
+  def newLayer(self,layerSize,activationFunction):
     self.size=layerSize
-    self.activationKey=activation
+    self.outputShape=[layerSize]
+    self.activationKey=activationFunction
     try:
-      self.activation=self.activationLookup[activation]
+      self.activation=self.activationLookup[activationFunction]
     except KeyError as e:
-      raise unknownActivationFunction(activation)
-    
+      raise unknownActivationFunction(activationFunction)
+ 
+
+
+  #TODO make it throw an error if inputShape not [None]
+  def build(self,seed=None) -> int:
+    if self.built:return
+
+    if len(self.inputConnections)<1:
+      raise(notEnoughNodeConnections(len(self.inputConnections),1))
     #now make the variables
 
-    biasInit=0.1
-    weightInitSTDDEV=1/inputSize
+    inputShape=self.inputConnections[0].outputShape
+    self.inputSize=inputShape[0]
 
-    self.biases=Variable(constant(biasInit,shape=[layerSize]))
-    self.weights=Variable(truncated_normal([inputSize,layerSize],stddev=weightInitSTDDEV,mean=0))
+    biasInit=0.1
+    weightInitSTDDEV=1/self.inputSize
+
+    self.biases=Variable(constant(biasInit,shape=[self.size]))
+    self.weights=Variable(normal([self.inputSize,self.size],stddev=weightInitSTDDEV,mean=0,seed=seed))
+
+    self.built=True
+
+    self.totalTrainableVariables=self.inputSize*self.size
+    return self.totalTrainableVariables
+
  
   #function that executes the layer for a list of inputs
   #inp has shape [None,inputSize]
   #returns shape [None,outputSize] 
   def execute(self,inp):
-    return((self.activation(matmul([inp],self.weights)+self.biases))[0])
+    if not self.built:
+      raise(operationWithUnbuiltNode("execute"))
+    else:
+      return((self.activation(matmul([inp],self.weights)+self.biases))[0])
 
   #function that returns a shape [2] list of trainable variables
   #because these are tf varialbe it is returning a list of pointers
   def getTrainableVariables(self):
+    #does error checking
+    super().getTrainableVariables()
     #the set of weights and the biases are each a single multi-dimensional variable
     return([self.biases,self.weights])
+
+  def connect(self, connections):
+    if len(connections)==0: return
+    if len(connections[0].outputShape)!=1:
+      raise(invalidNodeConnection(connections[0].outputShape,[None]))
+    super().connect(connections)
 
   #Creates a directory for the layer
 
@@ -66,19 +94,16 @@ class DenseLayer():
   # [path]/[subdir]/mat.weights (byteformat)
   # [path]/[subdir]/mat.biases (byteformat)
   # [path]/[subdir]/hyper.txt
-  def exportLayer(self,path,subdir):
+  def exportNode(self,path,subdir):
     import struct
-    from os import mkdir 
 
-    accessPath=path+"\\"+subdir
+    accessPath=super().exportNode(path,subdir)
 
-    #first step is to create a directory for the network if one does not already exist
-    try:
-      mkdir(accessPath)
-    except FileExistsError:
-      pass
-    except Exception as e:
-      raise(invalidPath(accessPath))    
+    #save type
+    #NOTE this will be overwritten by children
+    #therefore this saves the lowest class of the node
+    with open(accessPath+"\\type.txt","w") as f:
+      f.write("DenseLayer")
 
     #save hyper.txt
     #contins: inputSize, layerSize, activation 
@@ -104,18 +129,17 @@ class DenseLayer():
         biasFloats.append(float(self.biases[i]))
       f.write(bytearray(struct.pack(str(len(biasFloats))+"f",*biasFloats)))
 
+    return accessPath
+
+
   #function that loads a layer from files and stores perameters on stack
   #gets from to [path]/[subdir]
-  #throws missingFileForImport if file missing a file
-  #throws missingDirectoryForImport if entire directory is missing
-  def importLayer(self,superdir,subdir):
+  def importNode(self,myPath,subdir):
+    
+
     from os import path
 
-    accessPath=superdir+"\\"+subdir
-    
-    #check if directory exists
-    if not path.exists(accessPath):
-      raise(missingDirectoryForImport(accessPath))
+    accessPath,connections=super().importNode(myPath,subdir)
 
     #import from hyper.txt
     try:
@@ -129,6 +153,7 @@ class DenseLayer():
           raise(invalidDataInFile(accessPath+"\\hyper.txt","inputSize",fileLines[0]))
         try:
           self.size=int(fileLines[1]) 
+          self.outputShape=[self.size]
         except ValueError as e:
           raise(invalidDataInFile(accessPath+"\\hyper.txt","size",fileLines[1]))
         try:
@@ -174,5 +199,9 @@ class DenseLayer():
 
     except IOError:
       raise(missingFileForImport(accessPath,"mat.biases"))
+
+    self.built=True
+
+    return accessPath,connections
 
      
