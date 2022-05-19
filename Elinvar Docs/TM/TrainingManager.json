@@ -1,0 +1,97 @@
+{
+  "Name":"TrainingManager",
+  "Superclasses":[],
+  "Subclasses":[],
+  "Description":"A container for managing multiple training episodes with in-built redundancy.",
+  "Properties":[
+    {
+      "Name":"trainingQue",
+      "Type":"List[Callable[[],TrainingEpisode]]",
+      "Description":"List of functions to create training episodes."
+    },
+    
+    {
+      "Name":"maxIterations",
+      "Type":"int",
+      "Description":"The number of iterations before ending an episode."
+    },
+    {
+      "Name":"maxIterationsConstraint",
+      "Type":"bool",
+      "Description":"Weather an iteration constraint on TrainingEpisodes is present."
+    },
+    {
+      "Name":"minCrossVal",
+      "Type":"float",
+      "Description":"The crossValError under which a TrainingEpisode should end."
+    },
+    {
+      "Name":"minErrorConstraint",
+      "Type":"bool",
+      "Description":"Weather a crossValError constraint on trainingEpisodes is present."
+    },
+    {
+      "Name":"modules",
+      "Type":"List<Module>",
+      "Description":"List of modules. These have various uses. Modules are run at six points during the training cycle."
+    }
+  ],
+  "Functions":[
+    {
+      "Name":"__init__",
+      "MandatoryArgs":[],
+      "OptionalArgs":[],
+      "Returns":[],
+      "Throws":[],
+      "Description":"Sets up properties"
+    },
+    {
+      "Name":"setEpisodeExitCondition",
+      "MandatoryArgs":[
+        {
+          "Name":"condition",
+          "Type":"Elinvar.TM.Modules.Conditions.Condition",
+          "Description":"A TrainingEpisode will exit when this condition is met."
+        }
+      ],
+      "OptionalArgs":[],
+      "Returns":[],
+      "Throws":[],
+      "Description":"Sets the conditions under which a TrainingEpisode should end."
+    },
+    {
+      "Name":"runQue",
+      "MandatoryArgs":[],
+      "OptionalArgs":[
+        {
+          "Name":"saveDirectory",
+          "Type":"str",
+          "Description":"The path in which the model and trainingData should be saved."
+        }
+      ],
+      "Returns":[],
+      "Throws":[],
+      "Description":"Runs each TrainingEpisode in the sequence in which they were given in the trainingQue property."
+    },
+    {
+      "Name":"runEpisode",
+      "MandatoryArgs":[
+        {
+          "Name":"currentTrainingEpisode",
+          "Type":"TrainingEpisode",
+          "Description":"The TrainingEpisode to be trained."
+        },     
+        {
+          "Name":"currentTrainingEpisodeIndex",
+          "Type":"int",
+          "Description":"The index of the current training episode in the trainingQue."
+        }
+      ],
+      "OptionalArgs":[],
+      "Returns":[],
+      "Throws":[],
+      "Description":"Runs current TrainingEpisode until end conditions are met. If no end requirements are set this function will run forever. "
+    }
+  ],
+  "Notes":""
+}

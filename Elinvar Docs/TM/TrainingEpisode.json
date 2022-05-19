@@ -1,0 +1,168 @@
+{
+  "Name":"TrainingEpisode",
+  "Superclasses":[],
+  "Subclasses":[],
+  "Description":"A container for a training exercise involving the same network and the same dataset.",
+  "Properties":[
+    {
+      "Name":"name",
+      "Type":"str",
+      "Description":"The name of the trainingEpisode. This is used for exporting and therefor should be unique."
+    },
+    {
+      "Name":"iterationCounter",
+      "Type":"int",
+      "Description":"The number of iterations that have occurred."
+    },
+    {
+      "Name":"batchSize",
+      "Type":"int",
+      "Description":"Number of examples per batch."
+    },
+    {
+      "Name":"trainingDataSize",
+      "Type":"int",
+      "Description":"Number of training examples in the training data set."
+    },
+    {
+      "Name":"crossValSetSize",
+      "Type":"int",
+      "Description":"Number of instances in the cross validation set."
+    },
+    {
+      "Name":"crossValSelectionSeed",
+      "Type":"int",
+      "Description":"Random seed used for the selection of the cross validation set. "
+    },
+    {
+      "Name":"dataset",
+      "Type":"Dict<str><any>",
+      "Description":"Dataset for the training. Has four components: trainingFiles, crossValx, crossValy, extract. Extract is a function that produces an x,y for a given file."
+    },
+    {
+      "Name":"network",
+      "Type":"NetworK",
+      "Description":"The network to be trained."
+    },
+    {
+      "Name":"trainingProtocol",
+      "Type":"TrainingProtocol",
+      "Description":"The protocol used to update the weights in the network."
+    },
+    {
+      "Name":"iterationsPerCrossValRegress",
+      "Type":"int",
+      "Description":"Number of iterations between cross validation tests."
+    }
+  ],
+  "Functions":[
+    {
+      "Name":"__init__",
+      "MandatoryArgs":[
+        {
+          "Name":"name",
+          "Type":"str",
+          "Description":"Sets the name property."
+        },
+        {
+          "Name":"network",
+          "Type":"Elinvar.NN.Network",
+          "Description":"Sets network property."
+        },
+        {
+          "Name":"trainingProtocol",
+          "Type":"Elinvar.NN.TrainingProtocols.TrainingProtocol",
+          "Description":"Sets trainingProtocol property"
+        }
+      ],
+      "OptionalArgs":[],
+      "Returns":[],
+      "Throws":[],
+      "Description":"Sets up inputted properties."
+    },
+    {
+      "Name":"instantiateLearningConfig",
+      "MandatoryArgs":[
+        {
+          "Name":"batchSize",
+          "Type":"int",
+          "Description":"The number of training examples per batch."
+        }
+      ],
+      "OptionalArgs":[],
+      "Returns":[],
+      "Throws":[],
+      "Description":"Loads in data for learning"
+    },
+    {
+      "Name":"instantiateMonitoringConfig",
+      "MandatoryArgs":[
+        {
+          "Name":"iterationsPerCrossValSample",
+          "Type":"int",
+          "Description":"Number of iterations between cross validation tests."
+        },
+        {
+          "Name":"iterationsPerCrossValRegress",
+          "Type":"int",
+          "Description":"Number of iterations between "
+        }
+      ],
+      "OptionalArgs":[],
+      "Returns":[],
+      "Throws":[],
+      "Description":"Sets up monitoring of the training process."
+    },
+    {
+      "Name":"setDataSet",
+      "MandatoryArgs":[
+        {
+          "Name":"dataset",
+          "Type":"Dict<str><any>",
+          "Description":"{flies,extract} : files is a list of files, extract is file->x,y where x is a dict mapping input node IDs to values."
+        },
+        {
+          "Name":"datasetShuffleSeed",
+          "Type":"int",
+          "Description":"A seed for the random shuffling of the dataset."
+        },
+        {
+          "Name":"crossValSetSize",
+          "Type":"int",
+          "Description":"The number of training examples to be removed frm the training set for cross validation."
+        },
+        {
+          "Name":"crossValSelectionSeed",
+          "Type":"int",
+          "Description":"A seed for the random selection of the cross validation set."
+        }
+      ],
+      "OptionalArgs":[],
+      "Returns":[],
+      "Throws":[],
+      "Description":"Sets up internal properties for training."
+    },
+    {
+      "Name":"train",
+      "MandatoryArgs":[],
+      "OptionalArgs":[
+        {
+          "Name":"iterationCallback",
+          "Type":"Optional[Callable[[int,float,float],Any]",
+          "Description":"Callback that takes in iterationCounter, trainingError, iteration time. After training."
+        },
+        {
+          "Name":"crossValCallback",
+          "Type":"Optional[Callable[[int,float],Any]",
+          "Description":"Callback that takes in iterationCounter, crossValError. "
+        }
+      ],
+      "Returns":[],
+      "Throws":[
+        "Elinvar.TM.missingTrainingProtocol"
+      ],
+      "Description":""
+    }
+  ],
+  "Notes":""
+}

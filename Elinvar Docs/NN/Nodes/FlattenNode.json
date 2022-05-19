@@ -1,0 +1,117 @@
+{
+  "Name":"FlattenNode",
+  "Superclass":"Node",
+  "Subclasses":[],
+  "Description":"Flattens all inputs into tensor of shape[None] whilst persevering batch shape.",
+  "Properties":[
+
+  ],
+  "Functions":[
+    {
+      "Name":"__init__",
+      "MandatoryArgs":[],
+      "OptionalArgs":[
+        {
+          "Name":"name",
+          "Type":"str",
+          "Description":"Sets name property."
+        },
+        {
+          "Name":"protected",
+          "Type":"bool",
+          "Description":"option to block clear function"
+        },
+        {
+          "Name":"ID",
+          "Type":"int",
+          "Description":"Sets ID property."
+        },
+        {
+          "Name":"imported",
+          "Type":"bool",
+          "Description":"Weather this node has been imported. Used for verifying outputShape."
+        }
+      ],
+      "Returns":[],
+      "Throws":[],
+      "Description":"init function sets up key variables."
+    },
+    {
+      "Name":"execute",
+      "MandatoryArgs":[
+        {
+          "Name":"inputs",
+          "Type":"List",
+          "Description":"Input has any shape" 
+        }
+      ],
+      "OptionalArgs":[],
+      "Returns":[
+        {
+          "Type":"tf.Tensor",
+          "Description":"Has shape:[batchSize,None]"
+        }
+      ],
+      "Description":"Flattens tensors whilst preserving batch shape."
+    },
+    {
+      "Name":"importNode",
+      "MandatoryArgs":[
+        {
+          "Name":"myPath",
+          "Type":"str",
+          "Description":"Path the network is being saved to."
+        },
+        {
+          "Name":"subdir",
+          "Type":"str",
+          "Description":"Subdirectory within path where this layer is being saved to."
+        }
+      ],
+      "OptionalArgs":[],
+      "Returns":[
+        {
+          "Type":"str",
+          "Description":"The access path used. This is used for overloading."
+        },
+        {
+          "Type":"List<int>",
+          "Description":"A list of node IDs to connect to this node. This is because the connections can only be resolved when all nodes have been imported."
+        }
+      ],
+      "Throws":[
+        "Elinvar.NN.invalidPath(path)",
+        "Elinvar.NN.missingFileForImport(path,fileName)",
+        "Elinvar.NN.missingDirectoryForImport(path)"
+      ],
+      "Description":"Loads this layer from a specified folder. This does not build the node. The node must have connections set before using this function."
+    },
+    {
+      "Name":"exportNode",
+      "MandatoryArgs":[
+        {
+          "Name":"path",
+          "Type":"str",
+          "Description":"Path the network is being saved to."
+        },
+        {
+          "Name":"subdir",
+          "Type":"str",
+          "Description":"Subdirectory within path where this layer is being saved to."
+        }
+      ],
+      "OptionalArgs":[],
+      "Returns":[
+        {
+          "Type":"str",
+          "Description":"The access path used. This is used for overloading."
+        }
+      ],
+      "Throws":[
+        "Elinvar.NN.invalidPath(path)"
+      ],
+      "Description":"Exports ID, and connections. Checks directory existence and validity."
+    }
+  ],
+  "Notes":""
+}

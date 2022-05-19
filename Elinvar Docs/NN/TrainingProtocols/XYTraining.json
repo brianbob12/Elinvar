@@ -1,0 +1,69 @@
+{
+  "Name":"XYTraining",
+  "Superclass":"TrainingProtocol",
+  "Subclasses":[],
+  "Description":"A training protocol that compares the calculated output(guess) to the expected output(Y)",
+  "Properties":[
+    {
+      "Name":"errorFunction",
+      "Type":"ErrorFunction",
+      "Description":"The error function applied between the X and Y to calculate error. "
+    }
+  ],
+  "Function":[
+    {
+      "Name":"__init__",
+      "MandatoryArgs":[
+        {
+          "Name":"learningRate",
+          "Type":"float",
+          "Description":"Sets learningRate property"
+        },
+        {
+          "Name":"optimizer",
+          "Type":"tf.keras.optimizers.Optimizer",
+          "Description":"Sets optimizer property"
+        },
+        {
+          "Name":"requiredOutputNodes",
+          "Type":"List<Node>",
+          "Description":"Sets requiredOutputNodes property."
+        },
+        {
+          "Name":"errorFunction",
+          "Type":"ErrorFunction",
+          "Description":"Error function used to compute error between outputted values and Y. "
+        }
+      ],
+      "OptionalArgs":[],
+      "Returns":[],
+      "Throws":[],
+      "Description":""
+    },
+    {
+      "Name":"geError",
+      "MandatoryArgs":[
+        {
+          "Name":"networkOutputs",
+          "Type":"List<tf.Tensor>",
+          "Description":"A list of the outputs of the requestedOutputs in the order they are in the property. "
+        },
+        {
+          "Name":"getErrorArgs",
+          "Type":"List<tf.Tensor>",
+          "Description":"Contains a single element: A list of the expected values from the network. Has same shape as network Outputs."
+        }
+      ],
+      "OptionalArgs":[],
+      "Returns":[
+        {
+          "Type":"tf.Tensor",
+          "Description":"Error."
+        }
+      ],
+      "Throws":[],
+      "Description":"Produces a value for error based on the value of requiredOutputNodes. It calls getValue on each outputNode. Made to be overwritten."
+    } 
+  ],
+  "Notes":""
+}

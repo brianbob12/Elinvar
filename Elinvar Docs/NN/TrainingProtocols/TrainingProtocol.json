@@ -1,0 +1,78 @@
+{
+  "Name":"TrainingProtocol",
+  "Superclasses":[
+    "ABC"
+  ],
+  "Subclasses":[
+    "XYTraining"
+  ],
+  "Description":"Holds information for training a network for a given batch. This mostly deals with calculating error.",
+  "Properties":[
+    {
+      "Name":"requiredOutputNodes",
+      "Type":"List<Node>",
+      "Description":"A list of nodes used for the error calculation."
+    },
+    {
+      "Name":"learningRate",
+      "Type":"float",
+      "Description":"Learning rate for the given optimizer."
+    },
+    {
+      "Name":"optimizer",
+      "Type":"tensorflow.keras.optimizers.Optimizer",
+      "Description":"Optimizer used for changing perameters to reduce error."
+    }
+  ],
+  "Functions":[
+    {
+      "Name":"__init__",
+      "MandatoryArgs":[
+        {
+          "Name":"learningRate",
+          "Type":"float",
+          "Description":"Sets learningRate property"
+        },
+        {
+          "Name":"optimizer",
+          "Type":"tf.keras.optimizers.Optimizer",
+          "Description":"Sets optimizer property"
+        },
+        {
+          "Name":"requiredOutputNodes",
+          "Type":"List<Node>",
+          "Description":"Sets requiredOutputNodes property."
+        }
+      ],
+      "OptionalArgs":[],
+      "Returns":[],
+      "Throws":[],
+      "Description":""
+    }, 
+    {
+      "Name":"geError",
+      "MandatoryArgs":[
+        {
+          "Name":"networkOutputs",
+          "Type":"List<tf.Tensor>",
+          "Description":"A list of the outputs of the requestedOutputs in the order they are in the property. "
+        },
+        {
+          "Name":"getErrorArgs",
+          "Type":"List<Any>",
+          "Description":"A list of arguments needed to compute the error."
+        }
+      ],
+      "OptionalArgs":[],
+      "Returns":[
+        {
+          "Type":"tf.Tensor",
+          "Description":"Error."
+        }
+      ],
+      "Throws":[],
+      "Description":"Produces a value for error based on the value of requiredOutputNodes. It calls getValue on each outputNode. Made to be overwritten."
+    } 
+  ],
+  "Notes":"This is made as an argument for Network.train ."
+}
