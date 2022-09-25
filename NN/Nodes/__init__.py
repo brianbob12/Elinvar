@@ -4,9 +4,15 @@ from .DenseLayer import DenseLayer
 from .ConvolutionLayer import ConvolutionLayer
 from .TransposeConvolutionLayer import TransposeConvolutionLayer
 from .InstanceNormalizationNode import InstanceNormalizationNode
-from .AdaIN import AdaIN
+from .AdaINStyleTransfer import AdaINStyleTransfer
+from .AdaINSetStyle import AdaINSetStyle
 from .MaxPoolingNode import MaxPoolingNode
 from .FlattenNode import FlattenNode
 from .MaxPoolingNode import MaxPoolingNode
 from .InputNode import InputNode
 from .NodeNameLookup import NodeNameLookup
+from .DropoutNode import DropoutNode
+from .ElementwiseAddition import ElementwiseAddition
+from .UpsampleNode import UpsampleNode
+from .ScalingLayer import ScalingLayer
+from .TrainableConstant import TrainableConstant

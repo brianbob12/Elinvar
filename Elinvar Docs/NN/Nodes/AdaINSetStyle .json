@@ -1,17 +1,20 @@
 {
-  "Name":"BuildableNode",
-  "Superclass":"Node",
-  "Subclasses":[
-    "ConvolutionLayer",
-    "DenseLayer",
-    "TransposeConvolutionLayer"
+  "Name":"AdaINSetStyle",
+  "Superclasses":[
+    "BuildableNode"
   ],
-  "Description":"Holds node that require building. Building is done from the top of the networkd down",
+  "Subclasses":[],
+  "Description":"Normalizes input channels to specified means and standard deviations.",
   "Properties":[
     {
-      "Name":"built",
+      "Name":"imported",
       "Type":"bool",
-      "Description":"Holds if the Node is built currently."
+      "Description":"Weather this node has been imported or not"
+    },
+    {
+      "Name":"numberOfChannels",
+      "Type":"int",
+      "Description":"Number of channels of 2 dimensional images per iteration"
     }
   ],
   "Functions":[
@@ -27,17 +30,60 @@
         {
           "Name":"protected",
           "Type":"bool",
-          "Description":"option to block clear function"
+          "Description":"Option to block clear function."
         },
         {
           "Name":"ID",
           "Type":"int",
-          "Description":"Sets ID property."
+          "Description":"Sets ID property"
         }
       ],
       "Returns":[],
       "Throws":[],
-      "Description":""
+      "Description":"Sets up key variables."
+    },
+    {
+      "Name":"execute",
+      "MandatoryArgs":[
+        {
+          "Name":"inputs",
+          "Type":"List[tensorflow.Tensor]",
+          "Description":"First connection has shape=[batchSize,numberOfChannels] other connections have a combined number of channels equal to numberOfChannels"
+        }
+      ],
+      "OptionalArgs":[],
+      "Returns":[
+        {
+          "Type":"tensorflow.Tensor",
+          "Description":"Output of node."
+        }
+      ],
+      "Throws":[
+        "Elinvar.NN.invalidNumberOfNodeInputs",
+        "Elinvar.NN.invalidNodeInputShape"
+      ],
+      "Description":"Produces an output based on input connected values."
+    },
+    {
+      "Name":"connect",
+      "MandatoryArgs":[
+        {
+          "Name":"connections",
+          "Type":"List[Node]",
+          "Description":"A list of nodes to connect to."
+        }
+      ],
+      "OptionalArgs":[],
+      "Returns":[],
+      "Throws":[],
+      "Description":"First connection inputs style(means and standard deviations for the outputs), all subsequent connections have style set upon them."
+    },
+    {
+      "Name":"newLayer",
+      "MandatoryArgs":[],
+      "OptionalArgs":[],
+      "Returns":[],
+      "Description":"Creates a new layer instead of importing the layer."
     },
     {
       "Name":"build",
@@ -46,63 +92,13 @@
         {
           "Name":"seed",
           "Type":"Optional[int]",
-          "Description":"Random seed for filter generation."
+          "Description":"Seed for random number generator."
         }
       ],
       "Returns":[
-        {
-          "Type":"int",
-          "Description":"The number of trainable floats int he network."
-        }
+        "Elinvar.NN.invalidNumberOfNodeInputs"
       ],
-      "Throws":[],
-      "Description":"Made to be overridden, does different thing for each subclass."
-    },
-    {
-      "Name":"getValue",
-      "MandatoryArgs":[],
-      "OptionalArgs":[],
-      "Returns":[
-        {
-          "Type":"Any",
-          "Description":"output of shape outputShape"
-        }
-      ],
-      "Throws":[
-        "Elinvar.NN.operationWithUnbuiltNode(operation)"
-      ],
-      "Description":"Returns Node output, will store value for future calls. Made to be overwritten"
-    },
-    {
-      "Name":"execute",
-      "MandatoryArgs":[
-        {
-          "Name":"inputs",
-          "Type":"List",
-          "Description":"Input has shape=[len(inputConnections)]."
-        }
-      ],
-      "OptionalArgs":[],
-      "Returns":[],
-      "Throws":[
-        "Elinvar.NN.operationWithUnbuiltNode(nodeID,operation)"
-      ],
-      "Description":"Produces an output based on input connection values."
-    },
-    {
-      "Name":"getTrainableVariables",
-      "MandatoryArgs":[],
-      "OptionalArgs":[],
-      "Returns":[
-        {
-          "Type":"List",
-          "Description":"By default, empty list. This is overridden by children."
-        }
-      ],
-      "Throws":[
-        "Elinvar.NN.operationWithUnbuiltNode(operation)"
-      ],
-      "Description":"Returns trainable tf.Variables as a list."
+      "Description":"Builds the node."
     },
     {
       "Name":"exportNode",
@@ -126,8 +122,7 @@
         }
       ],
       "Throws":[
-        "Elinvar.NN.invalidPath(path)",
-        "Elinvar.NN.operationWithUnbuiltNode(nodeID,operation)"
+        "Elinvar.NN.invalidPath(path)"
       ],
       "Description":"Exports ID, and connections. Checks directory existence and validity."
     },
@@ -152,7 +147,7 @@
           "Description":"The access path used. This is used for overloading."
         },
         {
-          "Type":"List<int>",
+          "Type":"List[int]",
           "Description":"A list of node IDs to connect to this node. This is because the connections can only be resolved when all nodes have been imported."
         }
       ],
@@ -163,6 +158,5 @@
       ],
       "Description":"Imports ID and connections."
     }
-  ],
-  "Notes":""
+  ]
 }

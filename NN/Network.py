@@ -1,9 +1,10 @@
-from multiprocessing.sharedctypes import Value
 from random import randint
+from typing import Any, Dict, List
 
 from Elinvar.NN.Nodes.NodeNameLookup import NodeNameLookup
+from Elinvar.NN.TrainingProtocols import TrainingProtocol
 from .Nodes import *
-from tensorflow import GradientTape
+from tensorflow import GradientTape,Tensor
 
 from .Exceptions import *
 
@@ -71,7 +72,7 @@ class Network:
         out+=node.totalTrainableVariables
     return out
 
-  def execute(self,inputs,requestedOutputs):
+  def execute(self,inputs:Dict[int,Tensor],requestedOutputs)->List[Tensor]:
     #clear
     self.clear()
     #deal with inputs
@@ -81,12 +82,27 @@ class Network:
     #produce outputs
     return([i.getValue() for i in requestedOutputs])
 
-  def getError(self,inputs,trainingProtocol,getErrorArgs):
+  def getError(self,inputs:Dict[int,Tensor],trainingProtocol:TrainingProtocol,getErrorArgs:List[Any])->Tensor:
     networkOutputs=self.execute(inputs,trainingProtocol.requiredOutputNodes)
     error=trainingProtocol.getError(networkOutputs,getErrorArgs)
     return error
 
-  def train(self,inputs,trainingProtocol,getErrorArgs):
+  def trainingExecute(self,inputs:Dict[int,Tensor],requestedOutputs)->List[Tensor]:
+    #clear
+    self.clear()
+    #deal with inputs
+    for key in inputs.keys():
+      self.nodes[key].onExecute=(lambda value:(lambda :value))(inputs[key])
+    
+    #produce outputs
+    return([i.getValueTraining() for i in requestedOutputs])
+
+  def getTrainingError(self,inputs:Dict[int,Tensor],trainingProtocol:TrainingProtocol,getErrorArgs:List[Any])->Tensor:
+    networkOutputs=self.trainingExecute(inputs,trainingProtocol.requiredOutputNodes)
+    error=trainingProtocol.getError(networkOutputs,getErrorArgs)
+    return error
+
+  def train(self,inputs:Dict[int,Tensor],trainingProtocol:TrainingProtocol,getErrorArgs:List[Any])->Tensor:
     #all computation has to occur after watching trainableVariables
     #therefore we need to do a clear
     #nodes that are protected may mess this up
@@ -109,23 +125,20 @@ class Network:
 
     with GradientTape() as g:
       g.watch(myTrainableVariables)
-      error=self.getError(inputs,trainingProtocol,getErrorArgs)
+      error=self.getTrainingError(inputs,trainingProtocol,getErrorArgs)
       grads=g.gradient(error,myTrainableVariables)
 
-    #TODO move this to TrainingProtocol.py
-    optimizer=trainingProtocol.optimizer(trainingProtocol.learningRate)
-
-    #check for nonexsistant gradients
+    #check for nonexistent gradients
     c=0
     while c<len(grads):
       if grads[c]==None:
-        #remove this trainable variable
+        #remove this trainable variable's nonexistent variable
         del grads[c]
         del myTrainableVariables[c]
       else:
         c+=1
 
-    optimizer.apply_gradients(zip(grads,myTrainableVariables))
+    trainingProtocol.applyGradients(grads,myTrainableVariables)
 
     return error
 
@@ -210,9 +223,10 @@ class Network:
     importedIDs=[]
     allNodes=[]
     #recursive function
-    def importFromNode(networkPath:str,nodeID:int,importedIDs,allNodes) -> Node:
+    def importFromNode(networkPath:str,nodeID:int,importedIDs:List[int],allNodes:List[Node]) -> Node:
       if nodeID in importedIDs:
-        return
+        #return that node
+        return allNodes[importedIDs.index(nodeID)]
       else:
         importedIDs.append(nodeID)
 

@@ -1,13 +1,23 @@
 {
-  "Name":"FlattenNode",
-  "Superclasses":["Node"],
+  "Name":"UpsampleNode",
+  "Superclass":"Node",
   "Subclasses":[],
-  "Description":"Flattens all inputs into tensor of shape[None] whilst persevering batch shape.",
+  "Description":"Upsamples using bilinear interpolation.",
   "Properties":[
     {
       "Name":"imported",
       "Type":"bool",
       "Description":"Weather this node has been imported. Used for verifying outputShape."
+    },
+    {
+      "name":"newHeight",
+      "type":"int",
+      "description":"Height of output image."
+    },
+    {
+      "name":"newWidth",
+      "type":"int",
+      "description":"Width of output image."
     }
   ],
   "Functions":[
@@ -36,22 +46,39 @@
       "Description":"init function sets up key variables."
     },
     {
+      "Name":"connect",
+      "MandatoryArgs":[
+        {
+          "Name":"connections",
+          "Type":"List[Node]",
+          "Description":"A list of nodes to connect to."
+        }
+      ],
+      "OptionalArgs":[],
+      "Returns":[],
+      "Throws":[
+        "Elinvar.NN.invalidNumberOfNodeInputs",
+        "Elinvar.NN.invalidNodeInputShape"
+      ],
+      "Description":"Connects to a single node with shape: batch + [Any,Any,Any]."
+    },
+    {
       "Name":"execute",
       "MandatoryArgs":[
         {
           "Name":"inputs",
           "Type":"List[tf.Tensor]",
-          "Description":"Input has any shape" 
+          "Description":"Input has shape batch + [x,y,channels]" 
         }
       ],
       "OptionalArgs":[],
       "Returns":[
         {
           "Type":"tf.Tensor",
-          "Description":"Has shape: batch + [None]"
+          "Description":"Has shape:batch + [None]"
         }
       ],
-      "Description":"Flattens tensors whilst preserving batch shape."
+      "Description":"Upsamples each chanel with bilinear interpolation."
     },
     {
       "Name":"importNode",

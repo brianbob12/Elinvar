@@ -1,23 +1,29 @@
 {
-  "Name":"FlattenNode",
+  "Name":"DropoutNode",
   "Superclasses":["Node"],
   "Subclasses":[],
-  "Description":"Flattens all inputs into tensor of shape[None] whilst persevering batch shape.",
+  "Description":"Sets a certain random proportion of values to zero during trainingExecute whilst scaling up remaining values.",
   "Properties":[
     {
-      "Name":"imported",
-      "Type":"bool",
-      "Description":"Weather this node has been imported. Used for verifying outputShape."
+      "Name":"rate",
+      "Type":"float",
+      "Description":"The proportion of values set to zero during the trainingExecute."
     }
   ],
   "Functions":[
     {
       "Name":"__init__",
-      "MandatoryArgs":[],
+      "MandatoryArgs":[
+        {
+          "Name":"rate",
+          "Type":"float",
+          "Description":"The proportion of values set to zero during the trainingExecute."
+        }
+      ],
       "OptionalArgs":[
         {
           "Name":"name",
-          "Type":"Optional[str]",
+          "Type":"str",
           "Description":"Sets name property."
         },
         {
@@ -29,7 +35,12 @@
           "Name":"ID",
           "Type":"int",
           "Description":"Sets ID property."
-        }
+        },
+        {
+          "Name":"imported",
+          "Type":"bool",
+          "Description":"Weather this node has been imported. Used for verifying outputShape."
+        } 
       ],
       "Returns":[],
       "Throws":[],
@@ -40,7 +51,7 @@
       "MandatoryArgs":[
         {
           "Name":"inputs",
-          "Type":"List[tf.Tensor]",
+          "Type":"tf.Tensor",
           "Description":"Input has any shape" 
         }
       ],
@@ -48,10 +59,28 @@
       "Returns":[
         {
           "Type":"tf.Tensor",
-          "Description":"Has shape: batch + [None]"
+          "Description":"Has same shape as input."
         }
       ],
-      "Description":"Flattens tensors whilst preserving batch shape."
+      "Description":"Returns input."
+    },
+    {
+      "Name":"trainingExecute",
+      "MandatoryArgs":[
+        {
+          "Name":"inputs",
+          "Type":"tf.Tensor",
+          "Description":"Input has any shape" 
+        }
+      ],
+      "OptionalArgs":[],
+      "Returns":[
+        {
+          "Type":"tf.Tensor",
+          "Description":"Has same shape as input."
+        }
+      ],
+      "Description":"Returns input with certain value sets to zero an all other values scaled up by 1/(1-rate)."
     },
     {
       "Name":"importNode",

@@ -17,7 +17,7 @@
     {
       "Name":"imported",
       "Type":"bool",
-      "Description":"Whether this node has been imported or not. "
+      "Description":"Wether this node has been imported or not. "
     },
     {
       "Name":"inputChannels",
@@ -74,7 +74,7 @@
       "MandatoryArgs":[
         {
           "Name":"connections",
-          "Type":"List<Node>",
+          "Type":"List[Node]",
           "Description":"List of nodes. All nodes after first will be ignored"
         }
       ],
@@ -90,7 +90,7 @@
       "MandatoryArgs":[
         {
           "Name":"inputs",
-          "Type":"List<tf.Tensor>",
+          "Type":"List[tensorflow.Tensor]",
           "Description":"A tf.Tensor from each input connection."
         }
       ],
@@ -151,7 +151,7 @@
           "Description":"The access path used. This is used for overloading."
         },
         {
-          "Type":"List<int>",
+          "Type":"List[int]",
           "Description":"A list of node IDs to connect to this node. This is because the connections can only be resolved when all nodes have been imported."
         }
       ],

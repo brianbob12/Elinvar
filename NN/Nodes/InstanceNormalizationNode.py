@@ -1,4 +1,5 @@
 
+from typing import List
 from tensorflow import reduce_mean,transpose,broadcast_to
 from tensorflow.math import reduce_std
 from tensorflow import concat
@@ -17,6 +18,7 @@ class InstanceNormalizationNode(Node):
     self.totalTrainableVariables=0
     self.imported=False
     self.inputChannels=0
+    self.inputShape:List[int]=[]
 
   def newLayer(self,mean,stddev):
     self.stddev=stddev
@@ -77,7 +79,7 @@ class InstanceNormalizationNode(Node):
   def exportNode(self, path, subdir):
       accessPath= super().exportNode(path, subdir)
 
-     #save type
+      #save type
       #NOTE this will be overwritten by children
       #therefore this saves the lowest class of the node
       with open(accessPath+"\\type.txt","w") as f:
@@ -109,6 +111,6 @@ class InstanceNormalizationNode(Node):
           except ValueError as e:
             raise(invalidDataInFile(accessPath+"\\hyper.txt","stddev",fileLines[1]))
       except IOError:
-        raise(missingFileForImport(accessPath+"\\hyper.txt"))
+        raise(missingFileForImport(accessPath,"hyper.txt"))
       self.imported=True
       return accessPath,connections 
